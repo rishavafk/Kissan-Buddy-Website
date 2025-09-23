@@ -30,7 +30,19 @@ class AuthService {
   }
 
   async login(credentials: { username: string; password: string }): Promise<AuthResponse> {
-    const response = await apiRequest('POST', '/api/auth/login', credentials);
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
+      throw new Error(errorData.message || 'Login failed');
+    }
+    
     const data: AuthResponse = await response.json();
     
     this.setAuthData(data);
@@ -43,7 +55,19 @@ class AuthService {
     password: string; 
     fullName: string 
   }): Promise<AuthResponse> {
-    const response = await apiRequest('POST', '/api/auth/signup', userData);
+    const response = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Signup failed' }));
+      throw new Error(errorData.message || 'Signup failed');
+    }
+    
     const data: AuthResponse = await response.json();
     
     this.setAuthData(data);
