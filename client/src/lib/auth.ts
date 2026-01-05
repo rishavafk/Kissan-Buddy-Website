@@ -37,23 +37,24 @@ class AuthService {
       },
       body: JSON.stringify(credentials),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
-      throw new Error(errorData.message || 'Login failed');
+      const errorMessage = errorData.message || errorData.error || errorData.details || JSON.stringify(errorData) || 'Login failed';
+      throw new Error(errorMessage);
     }
-    
+
     const data: AuthResponse = await response.json();
-    
+
     this.setAuthData(data);
     return data;
   }
 
-  async signup(userData: { 
-    username: string; 
-    email: string; 
-    password: string; 
-    fullName: string 
+  async signup(userData: {
+    username: string;
+    email: string;
+    password: string;
+    fullName: string
   }): Promise<AuthResponse> {
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
@@ -62,33 +63,33 @@ class AuthService {
       },
       body: JSON.stringify(userData),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Signup failed' }));
       throw new Error(errorData.message || 'Signup failed');
     }
-    
+
     const data: AuthResponse = await response.json();
-    
+
     this.setAuthData(data);
     return data;
   }
 
   async getCurrentUser(): Promise<AuthUser | null> {
     if (!this.token) return null;
-    
+
     try {
       const response = await fetch('/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${this.token}`,
         },
       });
-      
+
       if (!response.ok) {
         this.logout();
         return null;
       }
-      
+
       const data = await response.json();
       this.user = data.user;
       localStorage.setItem('auth_user', JSON.stringify(this.user));
