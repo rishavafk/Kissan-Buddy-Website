@@ -563,4 +563,13 @@ export class SupabaseStorage implements IStorage {
 }
 
 // Automatically use Supabase if credentials are present (Vercel), otherwise fallback to MemStorage (Local)
+console.log("Initializing storage...");
+console.log("VITE_SUPABASE_URL present:", !!supabaseUrl);
+console.log("VITE_SUPABASE_ANON_KEY present:", !!supabaseAnonKey);
+
 export const storage = (supabaseUrl && supabaseAnonKey) ? new SupabaseStorage() : new MemStorage();
+if (supabaseUrl && supabaseAnonKey) {
+  console.log("Using SupabaseStorage");
+} else {
+  console.log("Using MemStorage (Falling back - Check Env Vars if this is Vercel)");
+}
