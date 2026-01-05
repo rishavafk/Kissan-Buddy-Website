@@ -1,4 +1,4 @@
-import { storage } from "../../server/storage";
+import { storage } from "../../lib/storage";
 import { insertUserSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";

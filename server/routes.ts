@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "../lib/storage";
 import {
   insertUserSchema, insertCropSchema, insertFieldSchema, insertDroneConnectionSchema,
   insertPlantHealthRecordSchema, insertPesticideApplicationSchema, insertContactMessageSchema,

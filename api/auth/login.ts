@@ -1,4 +1,4 @@
-import { storage } from "../../server/storage";
+import { storage } from "../../lib/storage";
 import { loginSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -11,7 +11,8 @@ export default async function handler(req: any, res: any) {
 
     try {
         const credentials = loginSchema.parse(req.body);
-        const user = await storage.getUserByUsername(credentials.username);
+        const user = await storage.getUserByUsername(credentials.username) ||
+            await storage.getUserByEmail(credentials.username);
 
         if (!user || !(await bcrypt.compare(credentials.password, user.password))) {
             return res.status(401).json({ message: "Invalid credentials" });

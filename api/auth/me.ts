@@ -1,4 +1,4 @@
-import { storage } from "../../server/storage";
+import { storage } from "../../lib/storage";
 import jwt from "jsonwebtoken";
 
 export default async function handler(req: any, res: any) {
