@@ -373,27 +373,33 @@ export class MemStorage implements IStorage {
 }
 
 export class SupabaseStorage implements IStorage {
+  private getSupabase() {
+    if (!supabase) {
+      throw new Error("Supabase client not initialized. Check your environment variables.");
+    }
+    return supabase;
+  }
+
   async getUser(id: string): Promise<User | undefined> {
-    if (!supabase) return undefined;
-    const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
+    const { data, error } = await this.getSupabase().from('users').select('*').eq('id', id).single();
     if (error || !data) return undefined;
     return data as User;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
+    const { data, error } = await this.getSupabase().from('users').select('*').eq('username', username).single();
     if (error || !data) return undefined;
     return data as User;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const { data, error } = await supabase.from('users').select('*').eq('email', email).single();
+    const { data, error } = await this.getSupabase().from('users').select('*').eq('email', email).single();
     if (error || !data) return undefined;
     return data as User;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const { data, error } = await supabase.from('users').insert([{
+    const { data, error } = await this.getSupabase().from('users').insert([{
       ...insertUser,
       role: insertUser.role || 'farmer',
       createdAt: new Date().toISOString()
@@ -403,19 +409,19 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getCropsByUserId(userId: string): Promise<Crop[]> {
-    const { data, error } = await supabase.from('crops').select('*').eq('user_id', userId);
+    const { data, error } = await this.getSupabase().from('crops').select('*').eq('user_id', userId);
     if (error) return [];
     return data as Crop[];
   }
 
   async getCrop(id: string): Promise<Crop | undefined> {
-    const { data, error } = await supabase.from('crops').select('*').eq('id', id).single();
+    const { data, error } = await this.getSupabase().from('crops').select('*').eq('id', id).single();
     if (error || !data) return undefined;
     return data as Crop;
   }
 
   async createCrop(insertCrop: InsertCrop): Promise<Crop> {
-    const { data, error } = await supabase.from('crops').insert([{
+    const { data, error } = await this.getSupabase().from('crops').insert([{
       ...insertCrop,
       growthStage: insertCrop.growthStage || 'seedling',
       isActive: insertCrop.isActive ?? true,
@@ -426,30 +432,30 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateCrop(id: string, cropUpdate: Partial<Crop>): Promise<Crop | undefined> {
-    const { data, error } = await supabase.from('crops').update(cropUpdate).eq('id', id).select().single();
+    const { data, error } = await this.getSupabase().from('crops').update(cropUpdate).eq('id', id).select().single();
     if (error || !data) return undefined;
     return data as Crop;
   }
 
   async deleteCrop(id: string): Promise<boolean> {
-    const { error } = await supabase.from('crops').delete().eq('id', id);
+    const { error } = await this.getSupabase().from('crops').delete().eq('id', id);
     return !error;
   }
 
   async getFieldsByUserId(userId: string): Promise<Field[]> {
-    const { data, error } = await supabase.from('fields').select('*').eq('user_id', userId);
+    const { data, error } = await this.getSupabase().from('fields').select('*').eq('user_id', userId);
     if (error) return [];
     return data as Field[];
   }
 
   async getField(id: string): Promise<Field | undefined> {
-    const { data, error } = await supabase.from('fields').select('*').eq('id', id).single();
+    const { data, error } = await this.getSupabase().from('fields').select('*').eq('id', id).single();
     if (error || !data) return undefined;
     return data as Field;
   }
 
   async createField(insertField: InsertField): Promise<Field> {
-    const { data, error } = await supabase.from('fields').insert([{
+    const { data, error } = await this.getSupabase().from('fields').insert([{
       ...insertField,
       createdAt: new Date().toISOString()
     }]).select().single();
@@ -458,19 +464,19 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getDronesByUserId(userId: string): Promise<DroneConnection[]> {
-    const { data, error } = await supabase.from('drone_connections').select('*').eq('user_id', userId);
+    const { data, error } = await this.getSupabase().from('drone_connections').select('*').eq('user_id', userId);
     if (error) return [];
     return data as DroneConnection[];
   }
 
   async getDrone(id: string): Promise<DroneConnection | undefined> {
-    const { data, error } = await supabase.from('drone_connections').select('*').eq('id', id).single();
+    const { data, error } = await this.getSupabase().from('drone_connections').select('*').eq('id', id).single();
     if (error || !data) return undefined;
     return data as DroneConnection;
   }
 
   async createDroneConnection(insertDrone: InsertDroneConnection): Promise<DroneConnection> {
-    const { data, error } = await supabase.from('drone_connections').insert([{
+    const { data, error } = await this.getSupabase().from('drone_connections').insert([{
       ...insertDrone,
       status: insertDrone.status || 'connected',
       batteryLevel: insertDrone.batteryLevel || 100,
@@ -482,7 +488,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateDrone(id: string, droneUpdate: Partial<DroneConnection>): Promise<DroneConnection | undefined> {
-    const { data, error } = await supabase.from('drone_connections').update({
+    const { data, error } = await this.getSupabase().from('drone_connections').update({
       ...droneUpdate,
       lastSeen: new Date().toISOString()
     }).eq('id', id).select().single();
@@ -491,7 +497,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getHealthRecordsByFieldId(fieldId: string): Promise<PlantHealthRecord[]> {
-    const { data, error } = await supabase.from('plant_health_records').select('*').eq('field_id', fieldId);
+    const { data, error } = await this.getSupabase().from('plant_health_records').select('*').eq('field_id', fieldId);
     if (error) return [];
     return data as PlantHealthRecord[];
   }
@@ -499,13 +505,13 @@ export class SupabaseStorage implements IStorage {
   async getHealthRecordsByUserId(userId: string): Promise<PlantHealthRecord[]> {
     const fields = await this.getFieldsByUserId(userId);
     const fieldIds = fields.map(f => f.id);
-    const { data, error } = await supabase.from('plant_health_records').select('*').in('field_id', fieldIds);
+    const { data, error } = await this.getSupabase().from('plant_health_records').select('*').in('field_id', fieldIds);
     if (error) return [];
     return data as PlantHealthRecord[];
   }
 
   async createHealthRecord(insertRecord: InsertPlantHealthRecord): Promise<PlantHealthRecord> {
-    const { data, error } = await supabase.from('plant_health_records').insert([{
+    const { data, error } = await this.getSupabase().from('plant_health_records').insert([{
       ...insertRecord,
       recordedAt: new Date().toISOString()
     }]).select().single();
@@ -514,7 +520,7 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getPesticideApplicationsByFieldId(fieldId: string): Promise<PesticideApplication[]> {
-    const { data, error } = await supabase.from('pesticide_applications').select('*').eq('field_id', fieldId);
+    const { data, error } = await this.getSupabase().from('pesticide_applications').select('*').eq('field_id', fieldId);
     if (error) return [];
     return data as PesticideApplication[];
   }
@@ -522,13 +528,13 @@ export class SupabaseStorage implements IStorage {
   async getPesticideApplicationsByUserId(userId: string): Promise<PesticideApplication[]> {
     const fields = await this.getFieldsByUserId(userId);
     const fieldIds = fields.map(f => f.id);
-    const { data, error } = await supabase.from('pesticide_applications').select('*').in('field_id', fieldIds);
+    const { data, error } = await this.getSupabase().from('pesticide_applications').select('*').in('field_id', fieldIds);
     if (error) return [];
     return data as PesticideApplication[];
   }
 
   async createPesticideApplication(insertApplication: InsertPesticideApplication): Promise<PesticideApplication> {
-    const { data, error } = await supabase.from('pesticide_applications').insert([{
+    const { data, error } = await this.getSupabase().from('pesticide_applications').insert([{
       ...insertApplication,
       status: insertApplication.status || 'recommended',
       recommendedBy: insertApplication.recommendedBy || 'ai_system',
@@ -540,13 +546,13 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updatePesticideApplication(id: string, applicationUpdate: Partial<PesticideApplication>): Promise<PesticideApplication | undefined> {
-    const { data, error } = await supabase.from('pesticide_applications').update(applicationUpdate).eq('id', id).select().single();
+    const { data, error } = await this.getSupabase().from('pesticide_applications').update(applicationUpdate).eq('id', id).select().single();
     if (error || !data) return undefined;
     return data as PesticideApplication;
   }
 
   async createContactMessage(insertMessage: InsertContactMessage): Promise<ContactMessage> {
-    const { data, error } = await supabase.from('contact_messages').insert([{
+    const { data, error } = await this.getSupabase().from('contact_messages').insert([{
       ...insertMessage,
       status: "new",
       createdAt: new Date().toISOString()
