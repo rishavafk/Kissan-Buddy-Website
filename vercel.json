@@ -2,7 +2,11 @@
     "version": 2,
     "builds": [
         {
-            "src": "api/index.ts",
+            "src": "api/auth/*.ts",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "api/health.ts",
             "use": "@vercel/node"
         },
         {
@@ -14,6 +18,14 @@
         }
     ],
     "rewrites": [
+        {
+            "source": "/api/auth/(.*)",
+            "destination": "/api/auth/$1"
+        },
+        {
+            "source": "/api/health",
+            "destination": "/api/health"
+        },
         {
             "source": "/api/(.*)",
             "destination": "/api/index.ts"
