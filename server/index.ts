@@ -1,7 +1,18 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { fileURLToPath } from 'url';
+
+// Simple log function (extracted from vite.ts to avoid importing vite in production)
+function log(message: string, source = "express") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
 
 const app = express();
 app.use(express.json());
@@ -37,7 +48,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// server/index.ts
 let server: any = null;
 
 const initializeApp = async () => {
@@ -51,21 +61,20 @@ const initializeApp = async () => {
       throw err;
     });
 
-    // setup vite only in development
-    if (app.get("env") === "development") {
+    // Only load vite in development - dynamic import to avoid production crash
+    if (process.env.NODE_ENV === "development") {
+      const { setupVite } = await import("./vite");
       await setupVite(app, server);
-    } else {
-      serveStatic(app);
     }
+    // In production/Vercel, we don't serve static files from Express
+    // Vercel handles static files via the static-build
   }
   return server;
 };
 
-// ALWAYS serve the app on the port specified in the environment variable PORT
 const port = parseInt(process.env.PORT || '5001', 10);
 
 // Only listen if running directly (not imported by Vercel)
-import { fileURLToPath } from 'url';
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   (async () => {
     const srv = await initializeApp();
