@@ -37,40 +37,46 @@ app.use((req, res, next) => {
   next();
 });
 
-const server = await registerRoutes(app);
+// server/index.ts
+let server: any = null;
 
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
+const initializeApp = async () => {
+  if (!server) {
+    server = await registerRoutes(app);
 
-  res.status(status).json({ message });
-  throw err;
-});
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      res.status(status).json({ message });
+      throw err;
+    });
 
-// importantly only setup vite in development and after
-// setting up all the other routes so the catch-all route
-// doesn't interfere with the other routes
-if (app.get("env") === "development") {
-  await setupVite(app, server);
-} else {
-  serveStatic(app);
-}
+    // setup vite only in development
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+  }
+  return server;
+};
 
 // ALWAYS serve the app on the port specified in the environment variable PORT
-// Other ports are firewalled. Default to 5000 if not specified.
-// this serves both the API and the client.
-// It is the only port that is not firewalled.
 const port = parseInt(process.env.PORT || '5001', 10);
 
 // Only listen if running directly (not imported by Vercel)
 import { fileURLToPath } from 'url';
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  server.listen({
-    port,
-    host: "0.0.0.0",
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  (async () => {
+    const srv = await initializeApp();
+    srv.listen({
+      port,
+      host: "0.0.0.0",
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  })();
 }
 
+export { app, initializeApp };
 export default app;
