@@ -1,16 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertCropSchema, insertFieldSchema, insertDroneConnectionSchema,
-         insertPlantHealthRecordSchema, insertPesticideApplicationSchema, insertContactMessageSchema,
-         loginSchema } from "@shared/schema";
+import {
+  insertUserSchema, insertCropSchema, insertFieldSchema, insertDroneConnectionSchema,
+  insertPlantHealthRecordSchema, insertPesticideApplicationSchema, insertContactMessageSchema,
+  loginSchema
+} from "@shared/schema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 const JWT_SECRET = process.env.SESSION_SECRET || 'default-secret-key';
-if (!JWT_SECRET) {
-  console.error('FATAL: SESSION_SECRET environment variable is required');
-  process.exit(1);
+if (!process.env.SESSION_SECRET) {
+  console.warn('WARNING: SESSION_SECRET not set, using default. This is insecure for production.');
 }
 
 // Middleware to verify JWT token
@@ -34,10 +35,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/signup', async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      
+
       // Check if user already exists
-      const existingUser = await storage.getUserByUsername(userData.username) || 
-                          await storage.getUserByEmail(userData.email);
+      const existingUser = await storage.getUserByUsername(userData.username) ||
+        await storage.getUserByEmail(userData.email);
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
@@ -49,9 +50,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate JWT token
       const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
 
-      res.status(201).json({ 
+      res.status(201).json({
         user: { id: user.id, username: user.username, email: user.email, fullName: user.fullName, role: user.role },
-        token 
+        token
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -62,16 +63,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const credentials = loginSchema.parse(req.body);
       const user = await storage.getUserByUsername(credentials.username);
-      
+
       if (!user || !await bcrypt.compare(credentials.password, user.password)) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
 
-      res.json({ 
+      res.json({
         user: { id: user.id, username: user.username, email: user.email, fullName: user.fullName, role: user.role },
-        token 
+        token
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -84,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json({ 
+      res.json({
         user: { id: user.id, username: user.username, email: user.email, fullName: user.fullName, role: user.role }
       });
     } catch (error: any) {
@@ -98,11 +99,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fields = await storage.getFieldsByUserId(req.user.userId);
       const healthRecords = await storage.getHealthRecordsByUserId(req.user.userId);
       const applications = await storage.getPesticideApplicationsByUserId(req.user.userId);
-      
+
       const totalFields = fields.length;
       const totalPlants = healthRecords.length * 100; // Approximate
       const healthyPlants = Math.floor(totalPlants * 0.87);
-      const averageInfectionRate = healthRecords.length > 0 
+      const averageInfectionRate = healthRecords.length > 0
         ? healthRecords.reduce((sum, record) => sum + record.infectionRate, 0) / healthRecords.length
         : 0;
       const pesticideSaved = applications.reduce((sum, app) => sum + (app.totalVolume || 0), 0);
@@ -145,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!existingCrop) {
         return res.status(404).json({ message: "Crop not found" });
       }
-      
+
       if (existingCrop.userId !== req.user.userId) {
         return res.status(403).json({ message: "You can only update your own crops" });
       }
@@ -153,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate the update data using a strict partial schema (exclude userId since it shouldn't be updated)
       const updateSchema = insertCropSchema.omit({ userId: true }).partial().strict();
       const validatedData = updateSchema.parse(req.body);
-      
+
       const crop = await storage.updateCrop(req.params.id, validatedData);
       if (!crop) {
         return res.status(404).json({ message: "Crop not found" });
@@ -171,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!existingCrop) {
         return res.status(404).json({ message: "Crop not found" });
       }
-      
+
       if (existingCrop.userId !== req.user.userId) {
         return res.status(403).json({ message: "You can only delete your own crops" });
       }
@@ -180,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!deleted) {
         return res.status(500).json({ message: "Failed to delete crop" });
       }
-      
+
       res.status(200).json({ message: "Crop deleted successfully" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
