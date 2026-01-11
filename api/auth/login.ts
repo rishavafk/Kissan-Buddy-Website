@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { storage } from "../../lib/storage";
-import { loginSchema } from "@shared/schema";
+import { loginSchema } from "../../shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 

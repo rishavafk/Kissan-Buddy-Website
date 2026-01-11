@@ -3,7 +3,7 @@ import {
     type DroneConnection, type InsertDroneConnection, type PlantHealthRecord,
     type InsertPlantHealthRecord, type PesticideApplication, type InsertPesticideApplication,
     type ContactMessage, type InsertContactMessage
-} from "@shared/schema";
+} from "../shared/schema";
 import { randomUUID } from "crypto";
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
