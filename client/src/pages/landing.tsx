@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useLocation } from "wouter";
 import { Navbar } from './Navbar';
 import { Hero } from './Hero';
 import { Features } from './Features';
@@ -8,10 +9,9 @@ import { Technology } from './Technology';
 import { Impact } from './Impact';
 import { Contact } from './Contact copy';
 import { AdvancedDrone } from './AdvancedDrone';
-import { LoginPage } from './LoginPage';
 
-export default function App() {
-  const [showLogin, setShowLogin] = useState(false);
+export default function LandingPage() {
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     // Smooth scrolling for anchor links
@@ -41,10 +41,6 @@ export default function App() {
     };
   }, []);
 
-  if (showLogin) {
-    return <LoginPage onBack={() => setShowLogin(false)} />;
-  }
-
   return (
     <div className="min-h-screen bg-[var(--drone-dark)] text-white overflow-x-hidden">
       {/* Custom cursor effect */}
@@ -62,7 +58,7 @@ export default function App() {
 
       <AdvancedDrone />
 
-      <Navbar onLoginClick={() => setShowLogin(true)} />
+      <Navbar onLoginClick={() => setLocation("/login")} />
 
       <main className="relative">
         <Hero />
