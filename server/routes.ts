@@ -5,7 +5,7 @@ import {
   insertUserSchema, insertCropSchema, insertFieldSchema, insertDroneConnectionSchema,
   insertPlantHealthRecordSchema, insertPesticideApplicationSchema, insertContactMessageSchema,
   loginSchema
-} from "@shared/schema";
+} from "../shared/schema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
